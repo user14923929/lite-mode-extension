@@ -19,3 +19,6 @@ web-ext-artifacts/
 # Node (если вдруг добавишь сборку)
 node_modules/
 package-lock.json
+
+# Metadata
+_metadata
