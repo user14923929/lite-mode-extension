@@ -1,0 +1,50 @@
+{
+  "ext_name":               { "message": "Lite Mode — Ускоритель браузера" },
+  "ext_description":        { "message": "Ускоряет загрузку страниц на слабых компьютерах, блокируя тяжёлые HTML-элементы, CSS-эффекты и JS-трекеры." },
+
+  "status_active":          { "message": "АКТИВНО" },
+  "status_disabled":        { "message": "ОТКЛЮЧЕНО" },
+  "status_ready":           { "message": "готово" },
+  "status_saving":          { "message": "сохранение..." },
+  "status_saved":           { "message": "сохранено ✓" },
+
+  "stat_removed":           { "message": "удалено" },
+  "stat_blocked":           { "message": "заблокировано" },
+  "stat_rules":             { "message": "правил DNR" },
+
+  "section_html":           { "message": "HTML элементы" },
+  "section_css":            { "message": "CSS эффекты" },
+  "section_js":             { "message": "JavaScript" },
+  "section_compat":         { "message": "Совместимость" },
+
+  "toggle_videos":          { "message": "Видео и аудио" },
+  "toggle_videos_hint":     { "message": "Заменяет <video> и <audio> заглушкой" },
+  "toggle_iframes":         { "message": "Iframe-вставки" },
+  "toggle_iframes_hint":    { "message": "Убирает встроенные фреймы" },
+  "toggle_animations":      { "message": "Анимации и переходы" },
+  "toggle_animations_hint": { "message": "Убирает animation, transition" },
+  "toggle_shadows":         { "message": "Тени и фильтры" },
+  "toggle_shadows_hint":    { "message": "Убирает box-shadow, filter" },
+  "toggle_backdrop":        { "message": "Backdrop-filter" },
+  "toggle_backdrop_hint":   { "message": "Размытие фона — очень тяжёлый эффект" },
+  "toggle_fonts":           { "message": "Веб-шрифты" },
+  "toggle_fonts_hint":      { "message": "Заменяет на системные, блокирует Google Fonts" },
+  "toggle_trackers":        { "message": "Трекеры и аналитика" },
+  "toggle_trackers_hint":   { "message": "Google Analytics, Facebook Pixel и др." },
+  "toggle_timers":          { "message": "Ограничить таймеры" },
+  "toggle_timers_hint":     { "message": "Патчит rAF, setInterval, setTimeout" },
+  "toggle_autoplay":        { "message": "Autoplay-медиа" },
+  "toggle_autoplay_hint":   { "message": "Скрывает медиа с атрибутом autoplay" },
+  "toggle_youtube":         { "message": "Исключение для YouTube" },
+  "toggle_youtube_hint":    { "message": "Разрешить видео и аудио на youtube.com" },
+  "toggle_spa_iframes":     { "message": "Исключение для SPA-сайтов" },
+  "toggle_spa_iframes_hint":{ "message": "Разрешить iframe на React/Vue SPA сайтах" },
+
+  "btn_reload":             { "message": "↻ перезагрузить вкладку" },
+
+  "placeholder_video":      { "message": "[Lite Mode: медиа скрыто]" },
+  "placeholder_iframe":     { "message": "[Lite Mode: iframe скрыт]" },
+
+  "warn_js_title":          { "message": "⚠ JavaScript ограничен" },
+  "warn_js_text":           { "message": "Некоторые функции страницы могут не работать. Lite Mode ограничивает JS-таймеры — если страница сломалась, попробуй отключить «Ограничить таймеры»." }
+}

@@ -1,410 +1,186 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lite Mode</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
-
     :root {
-      --bg:       #0f1117;
-      --surface:  #181c27;
-      --border:   #252a38;
-      --accent:   #4ade80;
-      --accent2:  #22d3ee;
-      --text:     #e2e8f0;
-      --muted:    #64748b;
-      --danger:   #f87171;
-      --radius:   10px;
-      --mono:     'JetBrains Mono', ui-monospace, monospace;
+      --bg:      #0f1117;
+      --surface: #181c27;
+      --border:  #252a38;
+      --accent:  #4ade80;
+      --accent2: #22d3ee;
+      --amber:   #f59e0b;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --radius:  10px;
+      --mono:    ui-monospace, monospace;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { width: 320px; font-family: var(--mono); background: var(--bg); color: var(--text); font-size: 12px; }
 
-    body {
-      width: 320px;
-      font-family: var(--mono);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 12px;
-    }
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 12px; border-bottom: 1px solid var(--border); }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .logo-name { font-size: 14px; font-weight: 600; letter-spacing: -0.5px; }
+    .logo-version { font-size: 10px; color: var(--muted); margin-left: 4px; }
 
-    /* ── Header ── */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px 12px;
-      border-bottom: 1px solid var(--border);
-    }
+    .master { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .master-label { flex: 1; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
+    .master.active .master-label { color: var(--accent); }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo-icon {
-      width: 28px; height: 28px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 7px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-    }
-
-    .logo-name {
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-    }
-
-    .logo-version {
-      font-size: 10px;
-      color: var(--muted);
-      margin-left: 4px;
-    }
-
-    /* ── Master toggle ── */
-    .master {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .master-label {
-      flex: 1;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .master.active .master-label {
-      color: var(--accent);
-    }
-
-    /* ── Stats bar ── */
-    .stats {
-      display: flex;
-      gap: 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .stat {
-      flex: 1;
-      padding: 8px 0;
-      text-align: center;
-      border-right: 1px solid var(--border);
-    }
-
+    .stats { display: flex; border-bottom: 1px solid var(--border); }
+    .stat { flex: 1; padding: 8px 0; text-align: center; border-right: 1px solid var(--border); }
     .stat:last-child { border-right: none; }
+    .stat-val { font-size: 16px; font-weight: 600; color: var(--accent2); display: block; }
+    .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); display: block; }
 
-    .stat-val {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--accent2);
-      display: block;
-    }
+    .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 10px 16px 4px; }
+    .section-title.compat { color: var(--amber); }
 
-    .stat-label {
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--muted);
-      margin-top: 1px;
-      display: block;
-    }
+    .toggle-row { display: flex; align-items: center; padding: 8px 16px; gap: 10px; transition: background 0.15s; cursor: pointer; }
+    .toggle-row:hover { background: var(--surface); }
+    .toggle-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background 0.2s; }
+    .toggle-row.on .toggle-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .toggle-row.compat-row.on .toggle-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .toggle-text { flex: 1; font-size: 12px; color: var(--text); line-height: 1.3; }
+    .toggle-text small { display: block; color: var(--muted); font-size: 10px; margin-top: 1px; }
 
-    /* ── Section ── */
-    .section-title {
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      padding: 10px 16px 4px;
-    }
-
-    /* ── Toggle row ── */
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      padding: 8px 16px;
-      gap: 10px;
-      transition: background 0.15s;
-      cursor: pointer;
-    }
-
-    .toggle-row:hover {
-      background: var(--surface);
-    }
-
-    .toggle-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--border);
-      flex-shrink: 0;
-      transition: background 0.2s;
-    }
-
-    .toggle-row.on .toggle-dot {
-      background: var(--accent);
-      box-shadow: 0 0 6px var(--accent);
-    }
-
-    .toggle-text {
-      flex: 1;
-      font-size: 12px;
-      color: var(--text);
-      line-height: 1.3;
-    }
-
-    .toggle-text small {
-      display: block;
-      color: var(--muted);
-      font-size: 10px;
-      margin-top: 1px;
-    }
-
-    /* ── Custom toggle switch ── */
-    .switch {
-      position: relative;
-      width: 34px; height: 18px;
-      flex-shrink: 0;
-    }
-
+    .switch { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
     .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .slider { position: absolute; inset: 0; background: var(--border); border-radius: 9px; transition: background 0.2s; cursor: pointer; }
+    .slider::after { content: ''; position: absolute; width: 12px; height: 12px; background: var(--muted); border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s, background 0.2s; }
+    .switch input:checked + .slider { background: color-mix(in srgb, var(--accent) 30%, var(--border)); }
+    .switch input:checked + .slider::after { transform: translateX(16px); background: var(--accent); }
+    .compat-row .switch input:checked + .slider { background: color-mix(in srgb, var(--amber) 30%, var(--border)); }
+    .compat-row .switch input:checked + .slider::after { background: var(--amber); }
 
-    .slider {
-      position: absolute;
-      inset: 0;
-      background: var(--border);
-      border-radius: 9px;
-      transition: background 0.2s;
-      cursor: pointer;
-    }
+    .switch-master { width: 42px; height: 22px; }
+    .switch-master .slider::after { width: 16px; height: 16px; }
+    .switch-master input:checked + .slider::after { transform: translateX(20px); }
 
-    .slider::after {
-      content: '';
-      position: absolute;
-      width: 12px; height: 12px;
-      background: var(--muted);
-      border-radius: 50%;
-      top: 3px; left: 3px;
-      transition: transform 0.2s, background 0.2s;
-    }
+    .footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .reload-btn { font-family: var(--mono); font-size: 10px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+    .reload-btn:hover { color: var(--text); border-color: var(--muted); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); display: inline-block; margin-right: 6px; transition: background 0.3s; }
+    .status-dot.saved { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .status-text { font-size: 10px; color: var(--muted); }
 
-    .switch input:checked + .slider {
-      background: color-mix(in srgb, var(--accent) 30%, var(--border));
-    }
-
-    .switch input:checked + .slider::after {
-      transform: translateX(16px);
-      background: var(--accent);
-    }
-
-    /* ── Master switch (bigger) ── */
-    .switch-master {
-      width: 42px; height: 22px;
-    }
-    .switch-master .slider::after {
-      width: 16px; height: 16px;
-    }
-    .switch-master input:checked + .slider::after {
-      transform: translateX(20px);
-    }
-
-    /* ── Footer ── */
-    .footer {
-      padding: 10px 16px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .reload-btn {
-      font-family: var(--mono);
-      font-size: 10px;
-      background: var(--surface);
-      color: var(--muted);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 5px 10px;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-      letter-spacing: 0.3px;
-    }
-
-    .reload-btn:hover {
-      color: var(--text);
-      border-color: var(--muted);
-    }
-
-    .status-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--muted);
-      display: inline-block;
-      margin-right: 6px;
-      transition: background 0.3s;
-    }
-
-    .status-dot.saved {
-      background: var(--accent);
-      box-shadow: 0 0 6px var(--accent);
-    }
-
-    .status-text {
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    /* Disabled state */
-    body.disabled .toggle-row:not(.master-row) {
-      opacity: 0.35;
-      pointer-events: none;
-    }
+    body.disabled .toggle-row:not(.master-row):not(.compat-row) { opacity: 0.35; pointer-events: none; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <div class="header">
-    <div class="logo">
-      <div class="logo-icon">⚡</div>
-      <span class="logo-name">Lite Mode<span class="logo-version">v1.0</span></span>
-    </div>
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <span class="logo-name">Lite Mode<span class="logo-version">v1.1</span></span>
   </div>
+</div>
 
-  <!-- Master toggle -->
-  <div class="master master-row" id="masterRow">
-    <span class="master-label" id="masterLabel">ОТКЛЮЧЕНО</span>
-    <label class="switch switch-master">
-      <input type="checkbox" id="toggle-enabled">
-      <span class="slider"></span>
-    </label>
+<div class="master master-row" id="masterRow">
+  <span class="master-label" id="masterLabel">—</span>
+  <label class="switch switch-master">
+    <input type="checkbox" id="toggle-enabled">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="stats">
+  <div class="stat"><span class="stat-val" id="stat-removed">0</span><span class="stat-label" data-i18n="stat_removed">removed</span></div>
+  <div class="stat"><span class="stat-val" id="stat-blocked">0</span><span class="stat-label" data-i18n="stat_blocked">blocked</span></div>
+  <div class="stat"><span class="stat-val" id="stat-rules">14</span><span class="stat-label" data-i18n="stat_rules">DNR rules</span></div>
+</div>
+
+<div class="section-title" data-i18n="section_html">HTML elements</div>
+
+<div class="toggle-row" data-key="blockVideos">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_videos">Video & Audio</span><small data-i18n="toggle_videos_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-blockVideos"><span class="slider"></span></label>
+</div>
+
+<div class="toggle-row" data-key="blockIframes">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_iframes">Iframe embeds</span><small data-i18n="toggle_iframes_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-blockIframes"><span class="slider"></span></label>
+</div>
+
+<div class="section-title" data-i18n="section_css">CSS effects</div>
+
+<div class="toggle-row" data-key="blockAnimations">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_animations">Animations</span><small data-i18n="toggle_animations_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-blockAnimations"><span class="slider"></span></label>
+</div>
+
+<div class="toggle-row" data-key="disableShadows">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_shadows">Shadows & Filters</span><small data-i18n="toggle_shadows_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-disableShadows"><span class="slider"></span></label>
+</div>
+
+<div class="toggle-row" data-key="disableBackdropFilter">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_backdrop">Backdrop-filter</span><small data-i18n="toggle_backdrop_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-disableBackdropFilter"><span class="slider"></span></label>
+</div>
+
+<div class="toggle-row" data-key="blockWebFonts">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_fonts">Web Fonts</span><small data-i18n="toggle_fonts_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-blockWebFonts"><span class="slider"></span></label>
+</div>
+
+<div class="section-title" data-i18n="section_js">JavaScript</div>
+
+<div class="toggle-row" data-key="blockTrackers">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_trackers">Trackers</span><small data-i18n="toggle_trackers_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-blockTrackers"><span class="slider"></span></label>
+</div>
+
+<div class="toggle-row" data-key="throttleTimers">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_timers">Throttle Timers</span><small data-i18n="toggle_timers_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-throttleTimers"><span class="slider"></span></label>
+</div>
+
+<div class="toggle-row" data-key="blockAutoplay">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_autoplay">Autoplay</span><small data-i18n="toggle_autoplay_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-blockAutoplay"><span class="slider"></span></label>
+</div>
+
+<!-- v1.1.0: Совместимость -->
+<div class="section-title compat" data-i18n="section_compat">Compatibility</div>
+
+<div class="toggle-row compat-row" data-key="youtubeException">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_youtube">YouTube exception</span><small data-i18n="toggle_youtube_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-youtubeException"><span class="slider"></span></label>
+</div>
+
+<div class="toggle-row compat-row" data-key="spaIframeException">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="toggle_spa_iframes">SPA iframe exception</span><small data-i18n="toggle_spa_iframes_hint"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-spaIframeException"><span class="slider"></span></label>
+</div>
+
+<div class="toggle-row compat-row" data-key="warnJs">
+  <div class="toggle-dot"></div>
+  <div class="toggle-text"><span data-i18n="warn_js_title">JS Warning</span><small data-i18n="warn_js_text"></small></div>
+  <label class="switch"><input type="checkbox" id="toggle-warnJs"><span class="slider"></span></label>
+</div>
+
+<div class="footer">
+  <div>
+    <span class="status-dot" id="statusDot"></span>
+    <span class="status-text" id="statusText">...</span>
   </div>
+  <button class="reload-btn" id="reloadBtn" data-i18n="btn_reload">↻ reload tab</button>
+</div>
 
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat">
-      <span class="stat-val" id="stat-removed">0</span>
-      <span class="stat-label">удалено</span>
-    </div>
-    <div class="stat">
-      <span class="stat-val" id="stat-blocked">0</span>
-      <span class="stat-label">заблокировано</span>
-    </div>
-    <div class="stat">
-      <span class="stat-val" id="stat-rules">14</span>
-      <span class="stat-label">правил DNR</span>
-    </div>
-  </div>
-
-  <!-- Section: HTML -->
-  <div class="section-title">HTML элементы</div>
-
-  <div class="toggle-row" data-key="blockVideos">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Видео и аудио
-      <small>Заменяет &lt;video&gt; и &lt;audio&gt; заглушкой</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-blockVideos"><span class="slider"></span></label>
-  </div>
-
-  <div class="toggle-row" data-key="blockIframes">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Iframe-вставки
-      <small>Убирает встроенные фреймы</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-blockIframes"><span class="slider"></span></label>
-  </div>
-
-  <!-- Section: CSS -->
-  <div class="section-title">CSS эффекты</div>
-
-  <div class="toggle-row" data-key="blockAnimations">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Анимации и переходы
-      <small>Убирает animation, transition</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-blockAnimations"><span class="slider"></span></label>
-  </div>
-
-  <div class="toggle-row" data-key="disableShadows">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Тени и фильтры
-      <small>Убирает box-shadow, filter</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-disableShadows"><span class="slider"></span></label>
-  </div>
-
-  <div class="toggle-row" data-key="disableBackdropFilter">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Backdrop-filter
-      <small>Размытие фона — очень тяжёлый эффект</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-disableBackdropFilter"><span class="slider"></span></label>
-  </div>
-
-  <div class="toggle-row" data-key="blockWebFonts">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Веб-шрифты
-      <small>Заменяет на системные, блокирует Google Fonts</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-blockWebFonts"><span class="slider"></span></label>
-  </div>
-
-  <!-- Section: JS -->
-  <div class="section-title">JavaScript</div>
-
-  <div class="toggle-row" data-key="blockTrackers">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Трекеры и аналитика
-      <small>Google Analytics, Facebook Pixel и др.</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-blockTrackers"><span class="slider"></span></label>
-  </div>
-
-  <div class="toggle-row" data-key="throttleTimers">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Ограничить таймеры
-      <small>Патчит rAF, setInterval, setTimeout</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-throttleTimers"><span class="slider"></span></label>
-  </div>
-
-  <div class="toggle-row" data-key="blockAutoplay">
-    <div class="toggle-dot"></div>
-    <div class="toggle-text">
-      Autoplay-медиа
-      <small>Скрывает autoplay видео/аудио</small>
-    </div>
-    <label class="switch"><input type="checkbox" id="toggle-blockAutoplay"><span class="slider"></span></label>
-  </div>
-
-  <!-- Footer -->
-  <div class="footer">
-    <div>
-      <span class="status-dot" id="statusDot"></span>
-      <span class="status-text" id="statusText">загрузка...</span>
-    </div>
-    <button class="reload-btn" id="reloadBtn">↻ перезагрузить вкладку</button>
-  </div>
-
-  <script src="popup.js"></script>
+<script src="popup.js"></script>
 </body>
 </html>

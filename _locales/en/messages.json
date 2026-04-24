@@ -1,0 +1,50 @@
+{
+  "ext_name":               { "message": "Lite Mode — Performance Booster" },
+  "ext_description":        { "message": "Speeds up page loading on weak computers by blocking heavy HTML, CSS effects and JS trackers." },
+
+  "status_active":          { "message": "ACTIVE" },
+  "status_disabled":        { "message": "DISABLED" },
+  "status_ready":           { "message": "ready" },
+  "status_saving":          { "message": "saving..." },
+  "status_saved":           { "message": "saved ✓" },
+
+  "stat_removed":           { "message": "removed" },
+  "stat_blocked":           { "message": "blocked" },
+  "stat_rules":             { "message": "DNR rules" },
+
+  "section_html":           { "message": "HTML elements" },
+  "section_css":            { "message": "CSS effects" },
+  "section_js":             { "message": "JavaScript" },
+  "section_compat":         { "message": "Compatibility" },
+
+  "toggle_videos":          { "message": "Video & Audio" },
+  "toggle_videos_hint":     { "message": "Replaces <video> and <audio> with a placeholder" },
+  "toggle_iframes":         { "message": "Iframe embeds" },
+  "toggle_iframes_hint":    { "message": "Removes embedded frames" },
+  "toggle_animations":      { "message": "Animations & Transitions" },
+  "toggle_animations_hint": { "message": "Kills animation, transition CSS" },
+  "toggle_shadows":         { "message": "Shadows & Filters" },
+  "toggle_shadows_hint":    { "message": "Removes box-shadow, filter" },
+  "toggle_backdrop":        { "message": "Backdrop-filter" },
+  "toggle_backdrop_hint":   { "message": "Blur effects — very GPU-heavy" },
+  "toggle_fonts":           { "message": "Web Fonts" },
+  "toggle_fonts_hint":      { "message": "Replaces with system font, blocks Google Fonts" },
+  "toggle_trackers":        { "message": "Trackers & Analytics" },
+  "toggle_trackers_hint":   { "message": "Google Analytics, Facebook Pixel, etc." },
+  "toggle_timers":          { "message": "Throttle Timers" },
+  "toggle_timers_hint":     { "message": "Patches rAF, setInterval, setTimeout" },
+  "toggle_autoplay":        { "message": "Autoplay Media" },
+  "toggle_autoplay_hint":   { "message": "Hides media with autoplay attribute" },
+  "toggle_youtube":         { "message": "YouTube exception" },
+  "toggle_youtube_hint":    { "message": "Allow video & audio on youtube.com" },
+  "toggle_spa_iframes":     { "message": "SPA iframe exception" },
+  "toggle_spa_iframes_hint":{ "message": "Allow iframes on React/Vue SPA sites" },
+
+  "btn_reload":             { "message": "↻ reload tab" },
+
+  "placeholder_video":      { "message": "[Lite Mode: media hidden]" },
+  "placeholder_iframe":     { "message": "[Lite Mode: iframe hidden]" },
+
+  "warn_js_title":          { "message": "⚠ JavaScript is disabled" },
+  "warn_js_text":           { "message": "Some features of this page may not work. Lite Mode has limited JS timers — if the page is broken, try disabling «Throttle Timers»." }
+}

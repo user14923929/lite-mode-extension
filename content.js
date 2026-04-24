@@ -1,7 +1,9 @@
-// ─── Lite Mode — Content Script ──────────────────────────────────────────────
-// Выполняется на каждой странице. Удаляет тяжёлые элементы, отключает
-// анимации и CSS-эффекты, ограничивает JS-таймеры.
-// run_at: document_start — до рендера страницы.
+// ─── Lite Mode v1.1.0 — Content Script ───────────────────────────────────────
+// Новое в v1.1.0:
+//   • Локализация через chrome.i18n
+//   • Исключение YouTube для video/audio
+//   • Исключение SPA-сайтов для iframe
+//   • Предупреждение об ограничении JS
 
 (function () {
   "use strict";
@@ -10,22 +12,37 @@
   let removedCount = 0;
   let blockedCount = 0;
   let observer = null;
+  let isSpaAllowed = false;
 
-  // ─── Загружаем настройки и запускаемся ─────────────────────────────────────
+  const hostname = location.hostname;
+  const isYouTube = hostname.endsWith("youtube.com") || hostname.endsWith("youtu.be");
+
+  // Получаем локализованную строку
+  function t(key) {
+    try { return chrome.i18n.getMessage(key) || key; } catch { return key; }
+  }
+
+  // ─── Запуск ────────────────────────────────────────────────────────────────
   chrome.runtime.sendMessage({ type: "GET_SETTINGS" }, (response) => {
     if (chrome.runtime.lastError) return;
     settings = response?.settings;
-    if (settings?.enabled) {
+    if (!settings?.enabled) return;
+
+    // Проверяем SPA-список в background
+    chrome.runtime.sendMessage({ type: "CHECK_SPA", hostname }, (res) => {
+      isSpaAllowed = !!res?.isSpa;
       init();
-    }
+    });
   });
 
-  // ─── Слушаем обновления настроек из popup ──────────────────────────────────
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === "SETTINGS_UPDATED") {
       settings = msg.settings;
       if (settings.enabled) {
-        init();
+        chrome.runtime.sendMessage({ type: "CHECK_SPA", hostname }, (res) => {
+          isSpaAllowed = !!res?.isSpa;
+          init();
+        });
       } else {
         cleanup();
       }
@@ -36,22 +53,24 @@
   function init() {
     injectPerformanceCSS();
 
-    if (settings.throttleTimers) {
-      patchTimers();
-    }
+    if (settings.throttleTimers) patchTimers();
 
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => {
-        processDom(document.body);
-        startObserver();
-      });
+      document.addEventListener("DOMContentLoaded", onReady);
     } else {
-      processDom(document.body);
-      startObserver();
+      onReady();
     }
   }
 
-  // ─── 1. CSS-оверрайды (инжектируем в <head> до рендера) ────────────────────
+  function onReady() {
+    processDom(document.body);
+    startObserver();
+    if (settings.warnJs && settings.throttleTimers) {
+      showJsWarning();
+    }
+  }
+
+  // ─── 1. CSS-оверрайды ──────────────────────────────────────────────────────
   function injectPerformanceCSS() {
     if (document.getElementById("__litmode_style__")) return;
 
@@ -70,16 +89,8 @@
 
     if (settings.disableShadows) {
       rules.push(`
-        * {
-          text-shadow: none !important;
-          filter: none !important;
-        }
-      `);
-      // box-shadow отдельно — иначе сломаются outline-эффекты фокуса
-      rules.push(`
-        *:not(:focus):not(:focus-within) {
-          box-shadow: none !important;
-        }
+        * { text-shadow: none !important; filter: none !important; }
+        *:not(:focus):not(:focus-within) { box-shadow: none !important; }
       `);
     }
 
@@ -94,21 +105,17 @@
 
     if (settings.blockWebFonts) {
       rules.push(`
-        * {
-          font-family: system-ui, -apple-system, sans-serif !important;
-        }
-        code, pre, kbd, samp {
-          font-family: ui-monospace, monospace !important;
-        }
+        * { font-family: system-ui, -apple-system, sans-serif !important; }
+        code, pre, kbd, samp { font-family: ui-monospace, monospace !important; }
       `);
     }
 
+    // Autoplay: не скрываем на YouTube если включено исключение
     if (settings.blockAutoplay) {
-      rules.push(`
-        video[autoplay], audio[autoplay] {
-          display: none !important;
-        }
-      `);
+      const youtubeSkip = settings.youtubeException && isYouTube;
+      if (!youtubeSkip) {
+        rules.push(`video[autoplay], audio[autoplay] { display: none !important; }`);
+      }
     }
 
     if (rules.length === 0) return;
@@ -116,34 +123,29 @@
     const style = document.createElement("style");
     style.id = "__litmode_style__";
     style.textContent = rules.join("\n");
-
-    // Вставляем как можно раньше
-    const target = document.head || document.documentElement;
-    target.prepend(style);
+    (document.head || document.documentElement).prepend(style);
   }
 
-  // ─── 2. Обработка DOM-элементов ────────────────────────────────────────────
+  // ─── 2. Обработка DOM ──────────────────────────────────────────────────────
   function processDom(root) {
     if (!root) return;
 
+    // Видео/аудио: пропускаем YouTube если включено исключение
     if (settings.blockVideos) {
-      removeElements(root, "video, audio", "медиа-элемент");
+      const skipVideo = settings.youtubeException && isYouTube;
+      if (!skipVideo) {
+        removeElements(root, "video, audio", t("placeholder_video"));
+      }
     }
 
+    // Iframe: пропускаем SPA-сайты если включено исключение
     if (settings.blockIframes) {
-      removeElements(root, "iframe", "iframe");
+      const skipIframe = settings.spaIframeException && isSpaAllowed;
+      if (!skipIframe) {
+        removeElements(root, "iframe", t("placeholder_iframe"));
+      }
     }
 
-    if (settings.blockCanvasAnimations) {
-      // Canvas оставляем (может быть нужен для контента),
-      // но останавливаем requestAnimationFrame у canvas-based анимаций
-      // через патч (см. patchTimers)
-      root.querySelectorAll("canvas").forEach(canvas => {
-        canvas.setAttribute("data-litmode-canvas", "1");
-      });
-    }
-
-    // Удаляем <script> с трекерами (не заблокированные declarativeNetRequest)
     if (settings.blockTrackers) {
       root.querySelectorAll("script[src]").forEach(script => {
         if (isTrackerUrl(script.src)) {
@@ -156,14 +158,15 @@
     reportStats();
   }
 
-  // ─── 3. Удаление элементов с заменой-заглушкой ─────────────────────────────
+  // ─── 3. Удаление с заглушкой ───────────────────────────────────────────────
   function removeElements(root, selector, label) {
     root.querySelectorAll(selector).forEach(el => {
+      if (el.hasAttribute("data-litmode")) return; // уже обработан
       const placeholder = document.createElement("div");
       placeholder.style.cssText = `
         display: inline-block;
         background: #f0f0f0;
-        border: 1px dashed #ccc;
+        border: 1px dashed #bbb;
         border-radius: 4px;
         padding: 4px 8px;
         font-size: 11px;
@@ -172,14 +175,14 @@
         max-width: 100%;
         box-sizing: border-box;
       `;
-      placeholder.textContent = `[Lite Mode: ${label} скрыт]`;
+      placeholder.textContent = label;
       placeholder.setAttribute("data-litmode", "placeholder");
       el.parentNode?.replaceChild(placeholder, el);
       removedCount++;
     });
   }
 
-  // ─── 4. MutationObserver — следим за динамически добавляемыми элементами ───
+  // ─── 4. MutationObserver ───────────────────────────────────────────────────
   function startObserver() {
     if (observer) observer.disconnect();
 
@@ -187,85 +190,135 @@
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node.nodeType !== Node.ELEMENT_NODE) continue;
-          processDom(node);
-          // Проверяем сам добавленный узел
           const tag = node.tagName?.toLowerCase();
+
           if (settings.blockVideos && (tag === "video" || tag === "audio")) {
-            removeElements(node.parentNode || document.body, `${tag}:not([data-litmode])`, "медиа-элемент");
+            const skipVideo = settings.youtubeException && isYouTube;
+            if (!skipVideo && !node.hasAttribute("data-litmode")) {
+              removeElements(
+                node.parentNode || document.body,
+                `${tag}:not([data-litmode])`,
+                t("placeholder_video")
+              );
+            }
           }
+
           if (settings.blockIframes && tag === "iframe") {
-            removeElements(node.parentNode || document.body, `iframe:not([data-litmode])`, "iframe");
+            const skipIframe = settings.spaIframeException && isSpaAllowed;
+            if (!skipIframe && !node.hasAttribute("data-litmode")) {
+              removeElements(
+                node.parentNode || document.body,
+                `iframe:not([data-litmode])`,
+                t("placeholder_iframe")
+              );
+            }
           }
+
+          processDom(node);
         }
       }
     });
 
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true
-    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  // ─── 5. Патчим JS-таймеры для снижения нагрузки ────────────────────────────
+  // ─── 5. Патч таймеров ──────────────────────────────────────────────────────
   function patchTimers() {
-    // Ограничиваем requestAnimationFrame: пропускаем каждый 2-й кадр
     const origRAF = window.requestAnimationFrame.bind(window);
     let frameCount = 0;
     window.requestAnimationFrame = function (cb) {
       frameCount++;
-      if (frameCount % 2 === 0) {
-        return origRAF(cb);
-      }
-      // Откладываем на следующий кадр без вызова
-      return origRAF(() => origRAF(cb));
+      return frameCount % 2 === 0
+        ? origRAF(cb)
+        : origRAF(() => origRAF(cb));
     };
 
-    // setInterval с задержкой < 100ms — растягиваем до 100ms
     const origSetInterval = window.setInterval.bind(window);
     window.setInterval = function (cb, delay, ...args) {
-      const safeDelay = (typeof delay === "number" && delay < 100) ? 100 : delay;
-      return origSetInterval(cb, safeDelay, ...args);
+      return origSetInterval(cb, (typeof delay === "number" && delay < 100) ? 100 : delay, ...args);
     };
 
-    // setTimeout с задержкой < 4ms — минимум 4ms (браузерный минимум)
     const origSetTimeout = window.setTimeout.bind(window);
     window.setTimeout = function (cb, delay, ...args) {
-      const safeDelay = (typeof delay === "number" && delay < 4) ? 4 : delay;
-      return origSetTimeout(cb, safeDelay, ...args);
+      return origSetTimeout(cb, (typeof delay === "number" && delay < 4) ? 4 : delay, ...args);
     };
   }
 
-  // ─── 6. Отключение (если расширение выключено через popup) ─────────────────
-  function cleanup() {
-    if (observer) {
-      observer.disconnect();
-      observer = null;
-    }
-    const style = document.getElementById("__litmode_style__");
-    if (style) style.remove();
-    // Заглушки не удаляем — страницу нужно перезагрузить
+  // ─── 6. Предупреждение об ограничении JS ───────────────────────────────────
+  function showJsWarning() {
+    if (document.getElementById("__litmode_warn__")) return;
+
+    const bar = document.createElement("div");
+    bar.id = "__litmode_warn__";
+    bar.style.cssText = `
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 2147483647;
+      max-width: 320px;
+      background: #1e1e2e;
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 12px 14px 10px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: #e2e8f0;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      line-height: 1.5;
+      cursor: default;
+      animation: none;
+    `;
+
+    const title = document.createElement("div");
+    title.style.cssText = "font-weight: 600; color: #f59e0b; margin-bottom: 4px; font-size: 13px;";
+    title.textContent = t("warn_js_title");
+
+    const text = document.createElement("div");
+    text.style.color = "#94a3b8";
+    text.textContent = t("warn_js_text");
+
+    const close = document.createElement("button");
+    close.textContent = "×";
+    close.style.cssText = `
+      position: absolute;
+      top: 8px; right: 10px;
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    `;
+    close.onclick = () => bar.remove();
+
+    bar.appendChild(title);
+    bar.appendChild(text);
+    bar.appendChild(close);
+    document.body?.appendChild(bar);
+
+    // Автоскрытие через 8 секунд
+    setTimeout(() => bar.remove(), 8000);
   }
 
-  // ─── 7. Вспомогательные функции ────────────────────────────────────────────
+  // ─── 7. Cleanup ────────────────────────────────────────────────────────────
+  function cleanup() {
+    observer?.disconnect();
+    observer = null;
+    document.getElementById("__litmode_style__")?.remove();
+    document.getElementById("__litmode_warn__")?.remove();
+  }
+
+  // ─── 8. Вспомогательные ────────────────────────────────────────────────────
   const TRACKER_PATTERNS = [
-    "google-analytics.com",
-    "googletagmanager.com",
-    "hotjar.com",
-    "doubleclick.net",
-    "googlesyndication.com",
-    "facebook.net",
-    "connect.facebook",
-    "amplitude.com",
-    "segment.io",
-    "sentry.io",
-    "clarity.ms",
-    "mc.yandex.ru",
-    "top-fwz1.mail.ru"
+    "google-analytics.com", "googletagmanager.com", "hotjar.com",
+    "doubleclick.net", "googlesyndication.com", "facebook.net",
+    "connect.facebook", "amplitude.com", "segment.io", "sentry.io",
+    "clarity.ms", "mc.yandex.ru", "top-fwz1.mail.ru"
   ];
 
   function isTrackerUrl(url) {
-    if (!url) return false;
-    return TRACKER_PATTERNS.some(pattern => url.includes(pattern));
+    return url ? TRACKER_PATTERNS.some(p => url.includes(p)) : false;
   }
 
   function reportStats() {
@@ -279,4 +332,5 @@
       blockedCount = 0;
     }
   }
+
 })();

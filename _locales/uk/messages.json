@@ -1,0 +1,50 @@
+{
+  "ext_name":               { "message": "Lite Mode — Прискорювач браузера" },
+  "ext_description":        { "message": "Прискорює завантаження сторінок на слабких комп'ютерах, блокуючи важкі HTML-елементи, CSS-ефекти та JS-трекери." },
+
+  "status_active":          { "message": "АКТИВНО" },
+  "status_disabled":        { "message": "ВИМКНЕНО" },
+  "status_ready":           { "message": "готово" },
+  "status_saving":          { "message": "збереження..." },
+  "status_saved":           { "message": "збережено ✓" },
+
+  "stat_removed":           { "message": "видалено" },
+  "stat_blocked":           { "message": "заблоковано" },
+  "stat_rules":             { "message": "правил DNR" },
+
+  "section_html":           { "message": "HTML елементи" },
+  "section_css":            { "message": "CSS ефекти" },
+  "section_js":             { "message": "JavaScript" },
+  "section_compat":         { "message": "Сумісність" },
+
+  "toggle_videos":          { "message": "Відео та аудіо" },
+  "toggle_videos_hint":     { "message": "Замінює <video> і <audio> заглушкою" },
+  "toggle_iframes":         { "message": "Iframe-вставки" },
+  "toggle_iframes_hint":    { "message": "Прибирає вбудовані фрейми" },
+  "toggle_animations":      { "message": "Анімації та переходи" },
+  "toggle_animations_hint": { "message": "Прибирає animation, transition" },
+  "toggle_shadows":         { "message": "Тіні та фільтри" },
+  "toggle_shadows_hint":    { "message": "Прибирає box-shadow, filter" },
+  "toggle_backdrop":        { "message": "Backdrop-filter" },
+  "toggle_backdrop_hint":   { "message": "Розмиття фону — дуже важкий ефект" },
+  "toggle_fonts":           { "message": "Веб-шрифти" },
+  "toggle_fonts_hint":      { "message": "Замінює на системні, блокує Google Fonts" },
+  "toggle_trackers":        { "message": "Трекери та аналітика" },
+  "toggle_trackers_hint":   { "message": "Google Analytics, Facebook Pixel та ін." },
+  "toggle_timers":          { "message": "Обмежити таймери" },
+  "toggle_timers_hint":     { "message": "Патчить rAF, setInterval, setTimeout" },
+  "toggle_autoplay":        { "message": "Autoplay-медіа" },
+  "toggle_autoplay_hint":   { "message": "Приховує медіа з атрибутом autoplay" },
+  "toggle_youtube":         { "message": "Виняток для YouTube" },
+  "toggle_youtube_hint":    { "message": "Дозволити відео та аудіо на youtube.com" },
+  "toggle_spa_iframes":     { "message": "Виняток для SPA-сайтів" },
+  "toggle_spa_iframes_hint":{ "message": "Дозволити iframe на React/Vue SPA сайтах" },
+
+  "btn_reload":             { "message": "↻ перезавантажити вкладку" },
+
+  "placeholder_video":      { "message": "[Lite Mode: медіа приховано]" },
+  "placeholder_iframe":     { "message": "[Lite Mode: iframe приховано]" },
+
+  "warn_js_title":          { "message": "⚠ JavaScript обмежено" },
+  "warn_js_text":           { "message": "Деякі функції сторінки можуть не працювати. Lite Mode обмежує JS-таймери — якщо сторінка зламалась, спробуй вимкнути «Обмежити таймери»." }
+}
